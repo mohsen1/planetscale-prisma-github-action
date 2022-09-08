@@ -6,6 +6,10 @@
   "repository": "git@github.com:mohsen1/planetscale-prisma-github-action.git",
   "author": "Mohsen Azimi <me@azimi.me>",
   "license": "MIT",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "node index.js"
+  },
   "devDependencies": {
     "prisma": "^4.3.1"
   },
