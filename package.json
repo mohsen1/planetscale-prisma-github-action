@@ -1,0 +1,15 @@
+{
+  "name": "planetscale-prisma-github-action",
+  "version": "1.0.0",
+  "description": "Automatically create database branches and deploy request in Github pull requests.",
+  "main": "index.js",
+  "repository": "git@github.com:mohsen1/planetscale-prisma-github-action.git",
+  "author": "Mohsen Azimi <me@azimi.me>",
+  "license": "MIT",
+  "devDependencies": {
+    "prisma": "^4.3.1"
+  },
+  "dependencies": {
+    "@prisma/client": "4.3.1"
+  }
+}

@@ -1,0 +1,14 @@
+name: CI
+on: [push]
+jobs:
+  PlanetScale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create a PlanetScale database branch
+        run: src/index.js
+        env:
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+          PLANETSCALE_SERVICE_TOKEN_ID: vyst07jboqne
+          PLANETSCALE_ORG: mohsen
+          DB_NAME: github-actions
