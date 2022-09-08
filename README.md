@@ -1,6 +1,7 @@
 # PlanetScale Prisma Github Action
 
 * Automatically create database branches and deploy request in Github pull requests. 
+* Mark Github Check as pending until PlanetScale deploy request is approved. (This requires PlanetScale to support Web Hooks. TBD)
 * Deploy databases to production when a pull request is merged.
 * Automatically delete database branches when a pull request is closed or merged.
 
