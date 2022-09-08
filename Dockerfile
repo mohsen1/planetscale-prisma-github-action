@@ -12,6 +12,7 @@ COPY index.js /index.js
 COPY package.json /package.json
 COPY yarn.lock /yarn.lock
 
+WORKDIR /
 RUN yarn install
 
 ENTRYPOINT ["/index.js"]
