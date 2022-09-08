@@ -9,6 +9,8 @@ RUN wget "https://github.com/planetscale/cli/releases/download/v0.115.0/pscale_0
     rm /tmp/pscale.deb
 
 COPY index.js /index.js
+COPY package.json /package.json
+COPY yarn.lock /yarn.lock
 
 RUN yarn install
 
