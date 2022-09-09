@@ -104,7 +104,11 @@ function createCommentBody(
     <!-- PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT -->
     `;
 
-  return `${header}${content}${footer}`;
+  const cleanContent = content.replace(
+    new RegExp(process.env.PLANETSCALE_SERVICE_TOKEN || "", "g"),
+    "pscale_tkn_***"
+  );
+  return `${header}${cleanContent}${footer}`;
 }
 
 async function main() {
