@@ -150,7 +150,7 @@ async function main() {
     PLANETSCALE_BRANCH_PREFIX,
     GITHUB_TOKEN,
     GITHUB_WORKSPACE,
-    GITHUB_REF_NAME,
+    GITHUB_HEAD_REF,
     PLANETSCALE_ORG,
     DB_NAME,
     PRISMA_DB_PUSH_COMMAND,
@@ -214,16 +214,9 @@ async function main() {
     }
   });
 
-  core.debug(
-    `
-    GITHUB_REF_NAME: ${GITHUB_REF_NAME};
-    GITHUB_HEAD_REF: ${process.env.GITHUB_HEAD_REF}
-  `
-  );
-
   // branch name has to be alphanumeric and start with a letter
   const branchName = (
-    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_REF_NAME
+    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_HEAD_REF
   ).replace(/[^a-zA-Z0-9-]/g, "-");
 
   /** @type {import("./types").PlanetScaleBranch[]} */

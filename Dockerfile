@@ -12,11 +12,12 @@ RUN wget "https://github.com/planetscale/cli/releases/download/v0.115.0/pscale_0
     rm /tmp/pscale.deb
 
 
+USER root
+
 COPY index.js /index.js
 COPY package.json /package.json
 COPY package-lock.json /package-lock.json
 
 RUN npm install
-
 
 ENTRYPOINT [ "/index.js" ]
