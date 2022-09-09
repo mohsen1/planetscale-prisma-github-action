@@ -88,12 +88,14 @@ function createCommentBody(
   header = `<h4>PlanetScale deploy request</h4>`
 ) {
   const footer = `
-    <hr>
-    <p>🤖 This comment was created by
+    <br>
+    <sub>
       <a href="https://github.com/mohsen1/planetscale-prisma-github-action">
-        planetscale-prisma-github-action
+        PlanetScale Prisma Github Action
       </a>
-    </p>`;
+    </sub>
+    <!-- PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT -->
+    `;
 
   return `${header}${content}${footer}`;
 }
@@ -121,8 +123,8 @@ async function main() {
   });
 
   let comment = comments.data.find((comment) => {
-    comment.user?.email === "github-actions[bot]@users.noreply.github.com" &&
-      comment.body?.includes("PlanetScale deploy request");
+    comment.user?.url === "https://github.com/apps/github-actions" &&
+      comment.body?.includes("PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT");
   });
 
   if (!comment) {
@@ -145,12 +147,9 @@ async function main() {
 
   const planetScale = new PlanetScale();
 
-  execSync(`git config --global --add safe.directory '*'`, { stdio: "ignore" });
-  const gitBranch = execSync("git rev-parse --abbrev-ref HEAD")
-    .toString()
-    .trim();
-  const branchPrefix = PLANETSCALE_BRANCH_PREFIX || "pull-request-";
-  const branchName = `${branchPrefix}${gitBranch}`;
+  const gitBranchName = execSync("${GITHUB_REF##*/}", { encoding: "utf8" });
+  const branchName =
+    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + gitBranchName;
 
   /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
@@ -164,25 +163,24 @@ async function main() {
 
   /** @type {import("./types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
-
-  const openDeployRequest = deployRequests.find(
-    (deployRequest) => deployRequest.branch === branchName
+  const branchDeployRequest = deployRequests.filter(
+    ({ branch }) => branch === branchName
   );
 
-  if (openDeployRequest) {
-    core.debug(`Found an existing deploy request for ${branchName}`);
+  let openDeployRequest = branchDeployRequest.find(
+    ({ state }) => state === "open"
+  );
 
-    if (openDeployRequest.approved) {
-      core.debug("Deploy request is already approved");
-    }
-  } else {
+  if (!openDeployRequest) {
     core.debug(`Creating a deploy request for ${branchName}`);
-    planetScale.deployRequest("create", branchName);
+    openDeployRequest = JSON.parse(
+      planetScale.deployRequest("create", branchName)
+    );
   }
 
   const deployRequestLink = `
-    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.id}'>
-      Deploy request #${openDeployRequest?.id}
+    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.number}'>
+      Deploy request #${openDeployRequest?.number}
     </a> for 
     <a href="https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/${branchName}">
       <code>${branchName}</code> branch

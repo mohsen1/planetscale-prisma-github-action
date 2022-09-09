@@ -31,6 +31,8 @@ export interface PlanetScaleDeployRequest {
   branch: string;
   /** ID of the deploy request */
   id: string;
+  /** Deploy request number */
+  number: number;
   /** Whether the deploy request is approved */
   approved: boolean;
   state: "open" | "closed";
