@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "checkJs": true,
+        "target": "ES2020",
+        "moduleResolution": "node"
+    }
+    ,
+    "include": [
+        "types.d.ts", "index.js"
+    ]
+}

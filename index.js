@@ -8,33 +8,6 @@ const core = require("@actions/core");
 const { execSync } = require("child_process");
 
 /**
- * @typedef PlanetScaleBranch
- * @property {string} name Name of the branch
- * @property {string} created_at
- * @property {string} updated_at
- */
-
-/**
- * @typedef PlanetScaleDeployRequestDeployment
- * @property {string} state State of the deployment
- * @property {boolean} deployable
- * @property {string | null} started_at When the deployment started
- * @property {string | null} finished_at When the deployment finished
- * @property {string | null} queued_at When the deployment finished
- * 
-/**
- * @typedef PlanetScaleDeployRequest
- * @property {string} branch Name of the branch
- * @property {string} id ID of the deploy request
- * @property {boolean} approved Whether the deploy request is approved
- * @property {string} state "open" | "closed"
- * @property {string} created_at Date string
- * @property {string} updated_at Date string
- * @property {string} closed_at Date string
- * @property {PlanetScaleDeployRequestDeployment} deployment
- */
-
-/**
  * Poor man's PlanetScale API client
  */
 class PlanetScale {
@@ -111,6 +84,10 @@ async function main() {
   const {PLANETSCALE_BRANCH_PREFIX} = process.env;
   let approvedDeployRequest = false;
 
+  core.debug(`Changing directory to ${process.env.GITHUB_WORKSPACE}`);
+
+  process.chdir(process.env.GITHUB_WORKSPACE);
+
   const planetScale = new PlanetScale();
 
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD")
@@ -119,7 +96,7 @@ async function main() {
   const branchPrefix = PLANETSCALE_BRANCH_PREFIX || "pull-request-";
   const branchName = `${branchPrefix}${gitBranch}`;
 
-  /** @type {PlanetScaleBranch[]} */
+  /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
 
   if (existingBranches.find(({ name }) => name === branchName)) {
@@ -129,7 +106,7 @@ async function main() {
     planetScale.branch("create", branchName);
   }
 
-  /** @type {PlanetScaleDeployRequest[]} */
+  /** @type {import("./types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
 
   const openDeployRequest = deployRequests.find(
