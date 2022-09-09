@@ -3,7 +3,7 @@ FROM ubuntu:latest
 WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y curl wget \
+    && apt-get install -y curl wget git \
     && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt install -y nodejs
