@@ -19,4 +19,4 @@ COPY package-lock.json /package-lock.json
 RUN npm install
 
 
-ENTRYPOINT [ "index.js" ]
+ENTRYPOINT [ "/index.js" ]

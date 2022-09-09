@@ -46,14 +46,22 @@ class PlanetScale {
       PLANETSCALE_ORG,
     } = process.env;
 
-    if (
-      !DB_NAME ||
-      !PLANETSCALE_SERVICE_TOKEN ||
-      !PLANETSCALE_SERVICE_TOKEN_ID ||
-      !PLANETSCALE_ORG
-    ) {
-      throw new Error("Missing environment variables");
+    if (!DB_NAME) {
+      throw new Error("DB_NAME environment variable is not set");
     }
+
+    if (!PLANETSCALE_SERVICE_TOKEN) {
+      throw new Error("PLANETSCALE_SERVICE_TOKEN environment variable is not set");
+    }
+
+    if (!PLANETSCALE_SERVICE_TOKEN_ID) {
+      throw new Error("PLANETSCALE_SERVICE_TOKEN_ID environment variable is not set");
+    }
+
+    if (!PLANETSCALE_ORG) {
+      throw new Error("PLANETSCALE_ORG environment variable is not set");
+    }
+
 
     this.DB_NAME = DB_NAME;
     this.PLANETSCALE_SERVICE_TOKEN = PLANETSCALE_SERVICE_TOKEN;
