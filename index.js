@@ -12,7 +12,9 @@ const { execSync } = require("child_process");
  * Poor man's PlanetScale API client
  */
 class PlanetScale {
-  constructor() {
+  /** @param {(error: string) => Promise<void>} onFailedCommand */
+  constructor(onFailedCommand) {
+    this.onFailedCommand = onFailedCommand;
     const {
       DB_NAME,
       PLANETSCALE_SERVICE_TOKEN,
@@ -59,7 +61,12 @@ class PlanetScale {
    * @param {string} cmd
    */
   command(cmd) {
-    return execSync(`pscale ${cmd} ${this.args}`, { encoding: "utf8" });
+    try {
+      return execSync(`pscale ${cmd} ${this.args}`, { encoding: "utf8" });
+    } catch (/** @type {any} */ error) {
+      this.onFailedCommand(error.message).catch(console.error);
+      throw error;
+    }
   }
 
   /**
@@ -146,7 +153,26 @@ async function main() {
 
   process.chdir(GITHUB_WORKSPACE);
 
-  const planetScale = new PlanetScale();
+  const planetScale = new PlanetScale(async (error) => {
+    const body = createCommentBody(
+      `<p>Failed to run the automation</p><pre>${error}</pre>`
+    );
+    if (comment) {
+      await octokit.rest.issues.updateComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        comment_id: comment.id,
+        body,
+      });
+    } else {
+      await octokit.rest.issues.createComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        issue_number: github.context.issue.number,
+        body,
+      });
+    }
+  });
 
   const branchName =
     (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_REF_NAME;
