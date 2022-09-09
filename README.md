@@ -44,6 +44,8 @@ steps:
     # Only run this action if the Prisma schema has changed
     if: contains(steps.changed-files.outputs.modified_files, 'schema/prisma.schema')
     with:
+      # Repository Github token (Automatically provided by Github Actions)
+      github-token: ${{ secrets.GITHUB_TOKEN }}
       # The name of the PlanetScale database to use
       database: my-database
       # The name of the PlanetScale organization to use
@@ -53,25 +55,3 @@ steps:
       # The PlanetScale API key to use
       planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
 ```
-
-<!--
-### Setup PlanetScale credentials
-
-You will need the following secrets in your Github repository:
-
-- `PLANETSCALE_SERVICE_TOKEN` - PlanetScale API service token
-
-### Configure Environment Variables
-
-You will need to configure the following environment variables:
-
-- `PLANETSCALE_ORG` - PlanetScale organization name
-- `PLANETSCALE_DB` - PlanetScale database name
-- `PLANETSCALE_SERVICE_TOKEN_ID` - PlanetScale API service token ID
-
-#### Optional Environment Variables
-- `PLANETSCALE_MAIN_BRANCH_NAME` - PlanetScale database branch name (defaults to `main`)
-- `PLANETSCALE_BRANCH_PREFIX` - Prefix to use for PlanetScale database branches (defaults to `pull-request-`)
-- `PRISMA_SCHEMA_FILE_PATH` - Path to the Prisma schema file (defaults to `prisma/schema.prisma`)
-- `PRISMA_DB_PUSH_COMMAND` - Command to run to push the Prisma schema to the PlanetScale database (defaults to `npx prisma db push`)
- -->

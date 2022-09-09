@@ -2,6 +2,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       GITHUB_WORKSPACE: string;
+      GITHUB_TOKEN?: string;
     }
   }
 }

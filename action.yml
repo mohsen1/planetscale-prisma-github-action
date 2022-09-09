@@ -1,6 +1,9 @@
 name: PlanetScale Prisma
 description: Automatically create database branches and deploy request in Github pull requests
 inputs:
+  github-token:
+    description: 'Github token'
+    required: true
   planetscale-service-token:
     description: PlanetScale service token
     required: true
@@ -36,6 +39,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
+    GITHUB_TOKEN: ${{ inputs.github-token }}
     PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
     PLANETSCALE_SERVICE_TOKEN_ID: ${{ inputs.planetscale-service-token-id }}
     PLANETSCALE_ORG: ${{ inputs.planetscale-org }}

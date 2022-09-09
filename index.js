@@ -5,6 +5,7 @@
 
 // This script is meant to run by Github Actions.
 const core = require("@actions/core");
+const github = require("@actions/github");
 const { execSync } = require("child_process");
 
 /**
@@ -24,17 +25,20 @@ class PlanetScale {
     }
 
     if (!PLANETSCALE_SERVICE_TOKEN) {
-      throw new Error("PLANETSCALE_SERVICE_TOKEN environment variable is not set");
+      throw new Error(
+        "PLANETSCALE_SERVICE_TOKEN environment variable is not set"
+      );
     }
 
     if (!PLANETSCALE_SERVICE_TOKEN_ID) {
-      throw new Error("PLANETSCALE_SERVICE_TOKEN_ID environment variable is not set");
+      throw new Error(
+        "PLANETSCALE_SERVICE_TOKEN_ID environment variable is not set"
+      );
     }
 
     if (!PLANETSCALE_ORG) {
       throw new Error("PLANETSCALE_ORG environment variable is not set");
     }
-
 
     this.DB_NAME = DB_NAME;
     this.PLANETSCALE_SERVICE_TOKEN = PLANETSCALE_SERVICE_TOKEN;
@@ -80,20 +84,69 @@ class PlanetScale {
   }
 }
 
+function createCommentBody(
+  content = "Working...",
+  header = `<h4>PlanetScale deploy request</h4>`
+) {
+  const footer = `
+    <hr>
+    <p>🤖 This comment was created by
+      <a href="https://github.com/mohsen1/planetscale-prisma-github-action">
+        planetscale-prisma-github-action
+      </a>
+    </p>`;
+
+  return `${header}${content}${footer}`;
+}
+
 async function main() {
-  const {PLANETSCALE_BRANCH_PREFIX} = process.env;
+  const {
+    PLANETSCALE_BRANCH_PREFIX,
+    GITHUB_TOKEN,
+    GITHUB_WORKSPACE,
+    PLANETSCALE_ORG,
+    DB_NAME,
+  } = process.env;
   let approvedDeployRequest = false;
 
-  core.debug(`Changing directory to ${process.env.GITHUB_WORKSPACE}`);
+  if (!GITHUB_TOKEN) {
+    throw new Error("GITHUB_TOKEN environment variable is not set");
+  }
 
-  process.chdir(process.env.GITHUB_WORKSPACE);
+  const octokit = github.getOctokit(GITHUB_TOKEN);
 
-  core.debug('ls -al')
-  core.debug(execSync(`ls -al`, { encoding: "utf8" }));
+  const comments = await octokit.rest.issues.listComments({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number,
+  });
 
+  let comment = comments.data.find((comment) => {
+    comment.user?.email === "github-actions[bot]@users.noreply.github.com" &&
+      comment.body?.includes("PlanetScale deploy request");
+  });
+
+  if (!comment) {
+    core.info("No existing comment found, creating a new one");
+    comment = (
+      await octokit.rest.issues.createComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        issue_number: github.context.issue.number,
+        body: createCommentBody(
+          "Creating a new deploy request for this branch..."
+        ),
+      })
+    ).data;
+  }
+
+  core.debug(`Changing directory to ${GITHUB_WORKSPACE}`);
+
+  process.chdir(GITHUB_WORKSPACE);
 
   const planetScale = new PlanetScale();
 
+  execSync(`git config --global --add safe.directory '*'`, { stdio: "ignore" });
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD")
     .toString()
     .trim();
@@ -114,8 +167,7 @@ async function main() {
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
 
   const openDeployRequest = deployRequests.find(
-    (deployRequest) =>
-      deployRequest.branch === branchName && deployRequest.state === "open"
+    (deployRequest) => deployRequest.branch === branchName
   );
 
   if (openDeployRequest) {
@@ -123,18 +175,32 @@ async function main() {
 
     if (openDeployRequest.approved) {
       core.debug("Deploy request is already approved");
-      approvedDeployRequest = true;
     }
   } else {
     core.debug(`Creating a deploy request for ${branchName}`);
     planetScale.deployRequest("create", branchName);
   }
 
-  if (!approvedDeployRequest) {
-    throw new Error(`Database deploy request for "${branchName}" branch is not approved`);
-  }
+  const deployRequestLink = `
+    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.id}'>
+      Deploy request #${openDeployRequest?.id}
+    </a> for 
+    <a href="https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/${branchName}">
+      <code>${branchName}</code> branch
+    </a>`;
+
+  await octokit.rest.issues.updateComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    comment_id: comment.id,
+    body: createCommentBody(
+      approvedDeployRequest
+        ? `<p>${deployRequestLink} was approved</p>`
+        : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`
+    ),
+  });
 }
 
 main().catch((err) => {
-  throw err
+  core.setFailed(err.message);
 });
