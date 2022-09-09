@@ -178,8 +178,17 @@ async function main() {
     }
   });
 
-  const branchName =
-    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_REF_NAME;
+  core.debug(
+    `
+    GITHUB_REF_NAME: ${GITHUB_REF_NAME};
+    GITHUB_HEAD_REF: ${process.env.GITHUB_HEAD_REF}
+  `
+  );
+
+  // branch name has to be alphanumeric and start with a letter
+  const branchName = (
+    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_REF_NAME
+  ).replace(/[^a-zA-Z0-9-]/g, "-");
 
   /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
