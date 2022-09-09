@@ -51,8 +51,7 @@ class PlanetScale {
       `--service-token-id ${this.PLANETSCALE_SERVICE_TOKEN_ID}`,
       `--service-token ${this.PLANETSCALE_SERVICE_TOKEN}`,
       `--org ${this.PLANETSCALE_ORG}`,
-      "--json",
-      "--no-colors",
+      "--format json",
     ].join(" ");
   }
 
