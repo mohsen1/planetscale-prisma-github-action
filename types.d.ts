@@ -44,3 +44,20 @@ export interface PlanetScaleDeployRequest {
   closed_at: string;
   deployment: PlanetScaleDeployRequestDeployment;
 }
+
+export interface PlanetScalePasswordResult {
+  id: string;
+  display_name: string;
+  username: string;
+  plain_text: string;
+  role: string;
+  database_branch: {
+    name: string;
+  };
+  created_at: string;
+  updated_at: string;
+  connection_strings: {
+    prisma: string;
+    general: string;
+  };
+}

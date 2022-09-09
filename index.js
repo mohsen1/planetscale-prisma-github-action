@@ -88,6 +88,40 @@ class PlanetScale {
       `deploy-request ${command} ${this.DB_NAME} ${arg ? arg : ""}`
     );
   }
+
+  /**
+   * @param {string} branchName
+   */
+  createConnectionUrl(branchName) {
+    const name =
+      "temporary-github-pull-request-automation-" +
+      Math.random().toString(36).substring(2, 15);
+
+    /** @type {import("./types").PlanetScalePasswordResult} */
+    const results = JSON.parse(
+      this.command(`password create ${this.DB_NAME} ${branchName} ${name}`)
+    );
+
+    return {
+      name,
+      DATABASE_URL: results.connection_strings.prisma
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.startsWith("url = "))
+        ?.replace('url = "', "")
+        .replace(/"$/, ""),
+    };
+  }
+
+  /**
+   * @param {string} branchName
+   * @param {string} name password name
+   */
+  deleteConnectionUrl(branchName, name) {
+    return this.command(
+      `password delete ${this.DB_NAME} ${branchName} ${name}`
+    );
+  }
 }
 
 function createCommentBody(
@@ -119,6 +153,7 @@ async function main() {
     GITHUB_REF_NAME,
     PLANETSCALE_ORG,
     DB_NAME,
+    PRISMA_DB_PUSH_COMMAND,
   } = process.env;
   let approvedDeployRequest = false;
 
@@ -134,10 +169,11 @@ async function main() {
     issue_number: github.context.issue.number,
   });
 
-  let comment = comments.data.find((comment) => {
-    comment.user?.url === "https://github.com/apps/github-actions" &&
-      comment.body?.includes("PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT");
-  });
+  let comment = comments.data.find(
+    (comment) =>
+      comment.user?.url === "https://github.com/apps/github-actions" &&
+      comment.body?.includes("PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT")
+  );
 
   if (!comment) {
     core.info("No existing comment found, creating a new one");
@@ -200,6 +236,18 @@ async function main() {
     planetScale.branch("create", branchName);
   }
 
+  // Push schema
+  const { name, DATABASE_URL } = planetScale.createConnectionUrl(branchName);
+  core.debug(`Created a temporary connection URL named ${name}`);
+
+  execSync(
+    `DATABASE_URL=${DATABASE_URL} ${
+      PRISMA_DB_PUSH_COMMAND || "npx prisma db push"
+    }`
+  );
+
+  planetScale.deleteConnectionUrl(branchName, name);
+
   /** @type {import("./types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
   const branchDeployRequest = deployRequests.filter(
@@ -231,7 +279,7 @@ async function main() {
     comment_id: comment.id,
     body: createCommentBody(
       approvedDeployRequest
-        ? `<p>${deployRequestLink} was approved</p>`
+        ? `<p>${deployRequestLink} <b>was approved</b></p>`
         : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`
     ),
   });
