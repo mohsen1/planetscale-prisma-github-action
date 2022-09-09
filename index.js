@@ -88,6 +88,10 @@ async function main() {
 
   process.chdir(process.env.GITHUB_WORKSPACE);
 
+  core.debug('ls -al')
+  core.debug(execSync(`ls -al`, { encoding: "utf8" }));
+
+
   const planetScale = new PlanetScale();
 
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD")
