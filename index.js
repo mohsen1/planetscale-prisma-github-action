@@ -105,6 +105,7 @@ async function main() {
     PLANETSCALE_BRANCH_PREFIX,
     GITHUB_TOKEN,
     GITHUB_WORKSPACE,
+    GITHUB_REF_NAME,
     PLANETSCALE_ORG,
     DB_NAME,
   } = process.env;
@@ -147,9 +148,8 @@ async function main() {
 
   const planetScale = new PlanetScale();
 
-  const gitBranchName = execSync("${GITHUB_REF##*/}", { encoding: "utf8" });
   const branchName =
-    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + gitBranchName;
+    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_REF_NAME;
 
   /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
