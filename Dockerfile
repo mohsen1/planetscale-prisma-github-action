@@ -14,10 +14,7 @@ RUN wget "https://github.com/planetscale/cli/releases/download/v0.115.0/pscale_0
 
 USER root
 
-COPY index.js /index.js
-COPY package.json /package.json
-COPY package-lock.json /package-lock.json
-
+COPY . /
 RUN npm install
 
 ENTRYPOINT [ "/index.js" ]
