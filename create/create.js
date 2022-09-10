@@ -8,8 +8,8 @@ const github = require("@actions/github");
 const fs = require("fs");
 const { execSync } = require("child_process");
 
-const PlanetScale = require("./PlanetScale");
-const { branchName } = require("./util");
+const PlanetScale = require("../PlanetScale");
+const { branchName } = require("../util");
 
 function createCommentBody(
   content = "Working...",
@@ -102,7 +102,7 @@ async function main() {
   core.setOutput("database-branch-name", branchName);
   fs.writeFileSync("/tmp/planetscale-branch-name", branchName);
 
-  /** @type {import("./types").PlanetScaleBranch[]} */
+  /** @type {import("../types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
   const existingBranch = existingBranches.find(
     ({ name }) => name === branchName
@@ -119,7 +119,7 @@ async function main() {
     planetScale.branch("create", branchName);
     while (true) {
       core.debug(`Waiting for the branch to be ready`);
-      /** @type {import("./types").PlanetScaleBranch[]} */
+      /** @type {import("../types").PlanetScaleBranch[]} */
       const branches = JSON.parse(planetScale.branch("list"));
 
       if (branches.find(({ name }) => name === branchName)?.ready) {
@@ -141,7 +141,7 @@ async function main() {
 
   fs.writeFileSync("/tmp/planetscale-password-name", name);
 
-  /** @type {import("./types").PlanetScaleDeployRequest[]} */
+  /** @type {import("../types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
   const branchDeployRequest = deployRequests.filter(
     ({ branch }) => branch === branchName
@@ -183,7 +183,7 @@ async function main() {
       <code>${branchName}</code>
     </a> database branch`;
 
-  /** @type {import("./types").PlanetScaleDeployRequestDiff[]} */
+  /** @type {import("../types").PlanetScaleDeployRequestDiff[]} */
   const diffs = JSON.parse(
     planetScale.deployRequest("diff", String(openDeployRequest.number))
   );

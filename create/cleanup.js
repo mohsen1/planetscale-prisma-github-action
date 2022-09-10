@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const PlanetScale = require("./PlanetScale");
+const PlanetScale = require("../PlanetScale");
 const fs = require("fs");
 const core = require("@actions/core");
 

@@ -2,9 +2,9 @@
 
 // @ts-check
 
-const PlanetScale = require("./PlanetScale");
+const PlanetScale = require("../PlanetScale");
 const core = require("@actions/core");
-const { branchName } = require("./util");
+const { branchName } = require("../util");
 
 async function merge() {
   const planetScale = new PlanetScale(async (error) => {
@@ -13,7 +13,7 @@ async function merge() {
 
   core.debug("Merging the deploy request into the main branch");
 
-  /** @type {import("./types").PlanetScaleDeployRequest[]} */
+  /** @type {import("../types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
 
   const openDeployRequest = deployRequests.find(
@@ -38,7 +38,7 @@ async function merge() {
 
   while (true) {
     core.debug(`Waiting for the deploy request to be merged`);
-    /** @type {import("./types").PlanetScaleDeployRequest[]} */
+    /** @type {import("../types").PlanetScaleDeployRequest[]} */
     const deployRequests = JSON.parse(planetScale.deployRequest("list"));
 
     if (
@@ -59,7 +59,7 @@ async function merge() {
 
   while (true) {
     core.debug(`Waiting for the branch to be deleted`);
-    /** @type {import("./types").PlanetScaleBranch[]} */
+    /** @type {import("../types").PlanetScaleBranch[]} */
     const branches = JSON.parse(planetScale.branch("list"));
 
     if (!branches.find(({ name }) => name === branchName)) {
