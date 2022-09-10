@@ -1,10 +1,31 @@
 name: Example
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 jobs:
-  PlanetScale:
+  PlanetScale_Merge:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - uses: ./merge
+        id: planetscale
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          db-name: github-actions
+          planetscale-org: mohsen
+          planetscale-service-token-id: g5pw6871o9uu
+          planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+
+  PlanetScale_Create:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
