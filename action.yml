@@ -2,7 +2,7 @@ name: PlanetScale Prisma
 description: Automatically create database branches and deploy request in Github pull requests
 inputs:
   github-token:
-    description: 'Github token'
+    description: "Github token"
     required: true
   planetscale-service-token:
     description: PlanetScale service token
@@ -30,14 +30,21 @@ inputs:
     default: npx prisma db push
 outputs:
   database-branch-name:
-    description: 'The name of the database branch created'
-  deploy-request-id:
-    description: 'The id of the deploy request created'
-  deploy-request-status:
-    description: 'The status of the deploy request created. Approved or Pending'
+    description: "The name of the database branch created"
+  deploy-request-number:
+    description: "The id of the deploy request created"
+  deploy-request-state:
+    description: "The state of the deploy request created. open or closed"
+  deploy-request-approved:
+    description: "The approval status of the deploy request created. true or false"
+  temporary-database-url:
+    description: "DATABASE_URL value for connecting to the branch. This is going to be invalid after action is run"
+  temporary-password-name:
+    description: "The name of the temporary password created"
+
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: "docker"
+  image: "Dockerfile"
   env:
     GITHUB_TOKEN: ${{ inputs.github-token }}
     PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
@@ -46,4 +53,3 @@ runs:
     DB_NAME: ${{ inputs.db-name }}
     PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
     PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}
-    PRISMA_DB_PUSH_COMMAND: ${{ inputs.prisma-db-push-command }}

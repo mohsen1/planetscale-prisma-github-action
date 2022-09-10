@@ -6,123 +6,10 @@
 // This script is meant to run by Github Actions.
 const core = require("@actions/core");
 const github = require("@actions/github");
+const fs = require("fs");
 const { execSync } = require("child_process");
 
-/**
- * Poor man's PlanetScale API client
- */
-class PlanetScale {
-  /** @param {(error: string) => Promise<void>} onFailedCommand */
-  constructor(onFailedCommand) {
-    this.onFailedCommand = onFailedCommand;
-    const {
-      DB_NAME,
-      PLANETSCALE_SERVICE_TOKEN,
-      PLANETSCALE_SERVICE_TOKEN_ID,
-      PLANETSCALE_ORG,
-    } = process.env;
-
-    if (!DB_NAME) {
-      throw new Error("DB_NAME environment variable is not set");
-    }
-
-    if (!PLANETSCALE_SERVICE_TOKEN) {
-      throw new Error(
-        "PLANETSCALE_SERVICE_TOKEN environment variable is not set"
-      );
-    }
-
-    if (!PLANETSCALE_SERVICE_TOKEN_ID) {
-      throw new Error(
-        "PLANETSCALE_SERVICE_TOKEN_ID environment variable is not set"
-      );
-    }
-
-    if (!PLANETSCALE_ORG) {
-      throw new Error("PLANETSCALE_ORG environment variable is not set");
-    }
-
-    this.DB_NAME = DB_NAME;
-    this.PLANETSCALE_SERVICE_TOKEN = PLANETSCALE_SERVICE_TOKEN;
-    this.PLANETSCALE_SERVICE_TOKEN_ID = PLANETSCALE_SERVICE_TOKEN_ID;
-    this.PLANETSCALE_ORG = PLANETSCALE_ORG;
-  }
-
-  get args() {
-    return [
-      `--service-token-id ${this.PLANETSCALE_SERVICE_TOKEN_ID}`,
-      `--service-token ${this.PLANETSCALE_SERVICE_TOKEN}`,
-      `--org ${this.PLANETSCALE_ORG}`,
-      "--format json",
-    ].join(" ");
-  }
-
-  /**
-   * @param {string} cmd
-   */
-  command(cmd) {
-    try {
-      return execSync(`pscale ${cmd} ${this.args}`, { encoding: "utf8" });
-    } catch (/** @type {any} */ error) {
-      this.onFailedCommand(error.message).catch(console.error);
-      throw error;
-    }
-  }
-
-  /**
-   * @param {"list" | "create"} command
-   * @param {string=} branchName
-   */
-  branch(command, branchName) {
-    return this.command(
-      `branch ${command} ${this.DB_NAME} ${branchName ? branchName : ""}`
-    );
-  }
-
-  /**
-   * @param {"list" | "create"} command
-   * @param {string=} arg Number of deploy request or name of the branch
-   */
-  deployRequest(command, arg) {
-    return this.command(
-      `deploy-request ${command} ${this.DB_NAME} ${arg ? arg : ""}`
-    );
-  }
-
-  /**
-   * @param {string} branchName
-   */
-  createConnectionUrl(branchName) {
-    const name =
-      "temporary-github-pull-request-automation-" +
-      Math.random().toString(36).substring(2, 15);
-
-    /** @type {import("./types").PlanetScalePasswordResult} */
-    const results = JSON.parse(
-      this.command(`password create ${this.DB_NAME} ${branchName} ${name}`)
-    );
-
-    return {
-      name,
-      DATABASE_URL: results.connection_strings.prisma
-        .split("\n")
-        .map((l) => l.trim())
-        .find((l) => l.startsWith("url = "))
-        ?.replace('url = "', "")
-        .replace(/"$/, ""),
-    };
-  }
-
-  /**
-   * @param {string} branchName
-   * @param {string} name password name
-   */
-  deleteConnectionUrl(branchName, name) {
-    return this.command(
-      `password delete ${this.DB_NAME} ${branchName} ${name}`
-    );
-  }
-}
+const PlanetScale = require("./PlanetScale");
 
 function createCommentBody(
   content = "Working...",
@@ -153,7 +40,6 @@ async function main() {
     GITHUB_HEAD_REF,
     PLANETSCALE_ORG,
     DB_NAME,
-    PRISMA_DB_PUSH_COMMAND,
   } = process.env;
   let approvedDeployRequest = false;
 
@@ -176,7 +62,7 @@ async function main() {
 
   let comment = comments.data.find(
     (comment) =>
-      comment.user?.url === "https://github.com/apps/github-actions" &&
+      comment.user?.login === "github-actions[bot]" &&
       comment.body?.includes("PLANETSCALE_PRISMA_GITHUB_ACTION_COMMENT")
   );
 
@@ -225,6 +111,9 @@ async function main() {
     "-"
   );
 
+  core.setOutput("database-branch-name", branchName);
+  fs.writeFileSync("/tmp/planetscale-branch-name", branchName);
+
   /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
   const existingBranch = existingBranches.find(
@@ -233,7 +122,9 @@ async function main() {
 
   if (existingBranch) {
     core.debug(
-      `Database branch "${branchName}" already exists: ${existingBranch}`
+      `Database branch "${branchName}" already exists: ${JSON.stringify(
+        existingBranch
+      )}`
     );
   } else {
     core.debug(`Creating a PlanetScale database branch named ${branchName}`);
@@ -253,18 +144,14 @@ async function main() {
   }
 
   // Push schema
-  const { name, DATABASE_URL } = planetScale.createConnectionUrl(branchName);
+  const { name, temporaryDatabaseUrl } =
+    planetScale.createConnectionUrl(branchName);
   core.debug(`Created a temporary connection URL named ${name}`);
 
-  core.debug(`Running the db push command: ${PRISMA_DB_PUSH_COMMAND}`);
-  execSync(PRISMA_DB_PUSH_COMMAND, {
-    env: {
-      ...process.env,
-      DATABASE_URL,
-    },
-    cwd: GITHUB_WORKSPACE,
-    uid: 0, // run as root
-  });
+  core.setOutput("temporary-database-url", temporaryDatabaseUrl);
+  core.setOutput("temporary-password-name", name);
+
+  fs.writeFileSync("/tmp/planetscale-password-name", name);
 
   core.debug(`Deleting the temporary connection URL named ${name}`);
   planetScale.deleteConnectionUrl(branchName, name);
@@ -285,6 +172,13 @@ async function main() {
       planetScale.deployRequest("create", branchName)
     );
   }
+
+  core.setOutput("deploy-request-number", openDeployRequest?.number);
+  core.setOutput("deploy-request-state", openDeployRequest?.state);
+  core.setOutput(
+    "deploy-request-approved",
+    JSON.stringify(Boolean(openDeployRequest?.approved))
+  );
 
   const deployRequestLink = `
     <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.number}'>
