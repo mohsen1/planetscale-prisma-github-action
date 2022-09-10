@@ -32,6 +32,9 @@ async function merge() {
     if (github.context.payload.event.action === "closed") {
       core.debug(`Closing the deploy request`);
       planetScale.deployRequest("close", openDeployRequest.id);
+
+      core.debug(`Deleting the database branch`);
+      planetScale.branch("delete", branchName);
     }
     return;
   }
