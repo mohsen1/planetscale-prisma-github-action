@@ -6,27 +6,9 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
-jobs:
-  PlanetScale_Merge:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-      - uses: ./merge
-        id: planetscale
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          db-name: github-actions
-          planetscale-org: mohsen
-          planetscale-service-token-id: g5pw6871o9uu
-          planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
 
+jobs:
+  # Run this job on pull request open
   PlanetScale_Create:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -46,7 +28,7 @@ jobs:
 
       - name: Create database branch and deploy request
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: ./
+        uses: ./create
         id: planetscale
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,3 +48,21 @@ jobs:
         run: yarn prisma db push
         env:
           DATABASE_URL: ${{ steps.planetscale.outputs.temporary-database-url }}
+
+  # Run this job on pull request close
+  PlanetScale_Merge:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - uses: ./merge
+        id: planetscale
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          db-name: github-actions
+          planetscale-org: mohsen
+          planetscale-service-token-id: g5pw6871o9uu
+          planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}

@@ -9,6 +9,7 @@ const fs = require("fs");
 const { execSync } = require("child_process");
 
 const PlanetScale = require("./PlanetScale");
+const { branchName } = require("./util");
 
 function createCommentBody(
   content = "Working...",
@@ -32,14 +33,8 @@ function createCommentBody(
 }
 
 async function main() {
-  const {
-    PLANETSCALE_BRANCH_PREFIX,
-    GITHUB_TOKEN,
-    GITHUB_WORKSPACE,
-    GITHUB_HEAD_REF,
-    PLANETSCALE_ORG,
-    DB_NAME,
-  } = process.env;
+  const { GITHUB_TOKEN, GITHUB_WORKSPACE, PLANETSCALE_ORG, DB_NAME } =
+    process.env;
   let approvedDeployRequest = false;
 
   if (!GITHUB_TOKEN) {
@@ -103,12 +98,6 @@ async function main() {
       });
     }
   });
-
-  // branch name has to be alphanumeric and start with a letter
-  const branchName = (PLANETSCALE_BRANCH_PREFIX + GITHUB_HEAD_REF).replace(
-    /[^a-zA-Z0-9-]/g,
-    "-"
-  );
 
   core.setOutput("database-branch-name", branchName);
   fs.writeFileSync("/tmp/planetscale-branch-name", branchName);
