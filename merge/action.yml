@@ -48,7 +48,7 @@ runs:
     - id: planetscale
       name: PlanetScale
       shell: bash
-      run: node $GITHUB_ACTION_PATH/main.js
+      run: node $GITHUB_ACTION_PATH/merge.js
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
