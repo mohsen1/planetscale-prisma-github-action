@@ -12,6 +12,7 @@ generator client {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  nickname  String
   name      String?
   posts     Post[]
   createdAt DateTime @default(now())
