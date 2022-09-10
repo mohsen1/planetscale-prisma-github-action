@@ -185,14 +185,26 @@ async function main() {
       <code>${branchName}</code> branch
     </a>`;
 
+  /** @type {import("./types").PlanetScaleDeployRequestDiff[]} */
+  const diffs = JSON.parse(
+    planetScale.deployRequest("diff", String(openDeployRequest?.number))
+  );
+  const diffsBody = diffs
+    .map(
+      ({ name, raw }) =>
+        `<details><summary>Schema changes (${name})</summary>\n\n\n\`\`\`diff\n${raw}\`\`\`\n\n\n</details>`
+    )
+    .join("\n");
+
   await octokit.rest.issues.updateComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     comment_id: comment.id,
     body: createCommentBody(
-      approvedDeployRequest
+      (approvedDeployRequest
         ? `<p>${deployRequestLink} <b>was approved</b></p>`
-        : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`
+        : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`) +
+        diffsBody
     ),
   });
 }
