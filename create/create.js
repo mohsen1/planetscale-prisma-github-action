@@ -16,10 +16,9 @@ const {
   updateCommentFor,
 } = require("../util");
 
-async function main() {
-  const { GITHUB_TOKEN, GITHUB_WORKSPACE, PLANETSCALE_ORG, DB_NAME } =
-    process.env;
+const { GITHUB_TOKEN, GITHUB_WORKSPACE } = process.env;
 
+async function main() {
   if (!GITHUB_TOKEN) {
     throw new Error("GITHUB_TOKEN environment variable is not set");
   }

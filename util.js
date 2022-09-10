@@ -5,8 +5,13 @@ const PlanetScale = require("./PlanetScale");
 
 // @ts-check
 
-const { PLANETSCALE_BRANCH_PREFIX, GITHUB_HEAD_REF, GITHUB_TOKEN } =
-  process.env;
+const {
+  PLANETSCALE_BRANCH_PREFIX,
+  GITHUB_HEAD_REF,
+  GITHUB_TOKEN,
+  PLANETSCALE_ORG,
+  DB_NAME,
+} = process.env;
 
 // branch name has to be alphanumeric and start with a letter
 const branchName = (PLANETSCALE_BRANCH_PREFIX + GITHUB_HEAD_REF).replace(
