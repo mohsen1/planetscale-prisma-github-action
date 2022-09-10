@@ -172,6 +172,8 @@ async function main() {
     issue_number: github.context.issue.number,
   });
 
+  core.debug(`Existing Github comments: ${JSON.stringify(comments, null, 2)}`);
+
   let comment = comments.data.find(
     (comment) =>
       comment.user?.url === "https://github.com/apps/github-actions" &&
