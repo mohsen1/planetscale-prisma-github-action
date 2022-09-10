@@ -168,31 +168,53 @@ async function main() {
     openDeployRequest = JSON.parse(
       planetScale.deployRequest("create", branchName)
     );
+    const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pulls/${github.context.payload.pull_request?.number}`;
+    const planetScaleComment = `This deploy request was automatically created by ${url}`;
+    planetScale.deployRequest(
+      "review",
+      `${openDeployRequest?.number} --comment "${planetScaleComment}"`
+    );
   }
 
-  core.setOutput("deploy-request-number", openDeployRequest?.number);
-  core.setOutput("deploy-request-state", openDeployRequest?.state);
+  if (!openDeployRequest) {
+    throw new Error("Failed to create a deploy request");
+  }
+
+  core.setOutput("deploy-request-number", openDeployRequest.number);
+  core.setOutput("deploy-request-state", openDeployRequest.state);
   core.setOutput(
     "deploy-request-approved",
-    JSON.stringify(Boolean(openDeployRequest?.approved))
+    JSON.stringify(Boolean(openDeployRequest.approved))
   );
 
   const deployRequestLink = `
-    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.number}'>
-      Deploy request #${openDeployRequest?.number}
+    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest.number}'>
+      Deploy request #${openDeployRequest.number}
     </a> for 
     <a href="https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/${branchName}">
       <code>${branchName}</code> branch
     </a>`;
+
+  /** @type {import("./types").PlanetScaleDeployRequestDiff[]} */
+  const diffs = JSON.parse(
+    planetScale.deployRequest("diff", String(openDeployRequest.number))
+  );
+  const diffsBody = diffs
+    .map(
+      ({ name, raw }) =>
+        `<details><summary>Schema changes (${name})</summary>\n\n\n\`\`\`diff\n${raw}\`\`\`\n\n\n</details>`
+    )
+    .join("\n");
 
   await octokit.rest.issues.updateComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     comment_id: comment.id,
     body: createCommentBody(
-      approvedDeployRequest
+      (approvedDeployRequest
         ? `<p>${deployRequestLink} <b>was approved</b></p>`
-        : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`
+        : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`) +
+        diffsBody
     ),
   });
 }
