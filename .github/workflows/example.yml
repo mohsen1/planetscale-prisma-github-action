@@ -28,7 +28,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           db-name: github-actions
           planetscale-org: mohsen
-          planetscale-service-token-id: hucnq9p853sq
+          planetscale-service-token-id: g5pw6871o9uu
           planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
 
       - name: Yarn install

@@ -54,8 +54,11 @@ runs:
     - id: install-planetscale-cli
       name: Install PlanetScale CLI
       shell: bash
+      env:
+        BASE: "https://github.com/planetscale/cli/releases/download"
+        VERSION: "0.115.0"
       run: |
-        wget "https://github.com/planetscale/cli/releases/download/v0.115.0/pscale_0.115.0_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
+        wget "$BASE/v$VERSION/pscale_$VERSION_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
         sudo dpkg -i /tmp/pscale.deb && \
         rm /tmp/pscale.deb
 
