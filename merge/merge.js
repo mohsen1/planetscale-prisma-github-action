@@ -3,6 +3,7 @@
 // @ts-check
 
 const PlanetScale = require("../PlanetScale");
+const github = require("@actions/github");
 const core = require("@actions/core");
 const { branchName } = require("../util");
 
@@ -22,6 +23,16 @@ async function merge() {
 
   if (!openDeployRequest) {
     core.debug(`No open deploy request for ${branchName}`);
+    return;
+  }
+
+  if (!github.context.payload.pull_request?.merged) {
+    core.debug(`Pull request is not merged`);
+
+    if (github.context.payload.event.action === "closed") {
+      core.debug(`Closing the deploy request`);
+      planetScale.deployRequest("close", openDeployRequest.id);
+    }
     return;
   }
 
