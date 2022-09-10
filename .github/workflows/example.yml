@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 jobs:
   PlanetScale_Merge:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true

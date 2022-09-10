@@ -76,3 +76,5 @@ runs:
         PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
         PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}
         ACTIONS_RUNNER_HOOK_JOB_COMPLETED: cleanup.sh
+        PR_NUMBER: ${{ github.event.number }}
+        GITHUB_ORG: ${{ github.event.repository.owner.login }}

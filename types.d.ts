@@ -69,3 +69,9 @@ export interface PlanetScalePasswordResult {
     general: string;
   };
 }
+
+export interface PlanetScaleDeployRequestDiff {
+  name: string;
+  raw: string;
+  html: string;
+}
