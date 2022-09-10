@@ -22,7 +22,7 @@ jobs:
 
       - name: Create database branch and deploy request
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: mohsen1/planetscale-prisma-github-action@main
+        uses: ./
         id: planetscale
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
