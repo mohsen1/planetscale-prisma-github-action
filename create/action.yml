@@ -1,4 +1,4 @@
-name: PlanetScale Prisma
+name: PlanetScale Prisma Create
 description: Automatically create database branches and deploy request in Github pull requests
 inputs:
   github-token:
@@ -51,16 +51,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: install-planetscale-cli
-      name: Install PlanetScale CLI
-      shell: bash
-      env:
-        BASE: "https://github.com/planetscale/cli/releases/download"
-        VERSION: "0.115.0"
-      run: |
-        wget "$BASE/v$(echo $VERSION)/pscale_$(echo $VERSION)_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
-        sudo dpkg -i /tmp/pscale.deb && \
-        rm /tmp/pscale.deb
+    - uses: ./install
 
     - uses: actions/checkout@v2
 
@@ -75,7 +66,7 @@ runs:
     - id: planetscale
       name: PlanetScale
       shell: bash
-      run: node $GITHUB_ACTION_PATH/main.js
+      run: node $GITHUB_ACTION_PATH/create.js
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}

@@ -1,0 +1,59 @@
+name: PlanetScale Prisma Merge
+description: Automatically merge the deploy request
+inputs:
+  github-token:
+    description: "Github token"
+    required: true
+  planetscale-service-token:
+    description: PlanetScale service token
+    required: true
+  planetscale-service-token-id:
+    description: PlanetScale service token id
+    required: true
+  planetscale-org:
+    description: PlanetScale organization
+    required: true
+  db-name:
+    description: Database name
+    required: true
+  planetscale-main-branch-name:
+    description: Main branch name
+    required: false
+    default: main
+  planetscale-branch-prefix:
+    description: Branch prefix for database branches
+    required: false
+    default: pull-request-
+  prisma-db-push-command:
+    description: Prisma db push command
+    required: false
+    default: npx prisma db push
+outputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: ./install
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-node@v2
+      with:
+        node-version: "16"
+
+    - uses: borales/actions-yarn@v3.0.0
+      with:
+        cmd: install
+
+    - id: planetscale
+      name: PlanetScale
+      shell: bash
+      run: node $GITHUB_ACTION_PATH/merge.js
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
+        PLANETSCALE_SERVICE_TOKEN_ID: ${{ inputs.planetscale-service-token-id }}
+        PLANETSCALE_ORG: ${{ inputs.planetscale-org }}
+        DB_NAME: ${{ inputs.db-name }}
+        PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
+        PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}

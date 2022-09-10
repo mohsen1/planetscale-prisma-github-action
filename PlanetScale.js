@@ -62,7 +62,7 @@ class PlanetScale {
   }
 
   /**
-   * @param {"list" | "create"} command
+   * @param {"list" | "create" | "delete"} command
    * @param {string=} branchName
    */
   branch(command, branchName) {
@@ -72,7 +72,7 @@ class PlanetScale {
   }
 
   /**
-   * @param {"list" | "create" | "diff" | "review"} command
+   * @param {"list" | "create" | "diff" | "review" | "deploy" | "close"} command
    * @param {string=} arg Number of deploy request or name of the branch and other arguments
    */
   deployRequest(command, arg) {

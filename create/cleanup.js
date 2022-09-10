@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-const PlanetScale = require("./PlanetScale");
+// @ts-check
+
+const PlanetScale = require("../PlanetScale");
 const fs = require("fs");
 const core = require("@actions/core");
+const { getOpenDeployRequest, updateCommentFor } = require("../util");
 
 async function cleanup() {
   const planetScale = new PlanetScale(async (error) => {
@@ -17,6 +20,12 @@ async function cleanup() {
     .readFileSync("/tmp/planetscale-password-name", "utf8")
     .toString()
     .trim();
+
+  // Update the comment one more time to have the diffs...
+  const openDeployRequest = await getOpenDeployRequest(branchName);
+  if (openDeployRequest) {
+    updateCommentFor(openDeployRequest);
+  }
 
   core.debug(
     `Deleting the temporary connection URL named "${passwordName}" for "${branchName}" branch`

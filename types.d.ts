@@ -2,7 +2,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       GITHUB_WORKSPACE: string;
-      GITHUB_TOKEN?: string;
+      GITHUB_TOKEN: string;
       PLANETSCALE_SERVICE_TOKEN: string;
       PLANETSCALE_SERVICE_TOKEN_ID: string;
       PLANETSCALE_ORG: string;
