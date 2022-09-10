@@ -1,6 +1,7 @@
 {
-    "editor.formatOnSave": true,
-    "cSpell.words": [
-        "PLANETSCALE"
-    ]
+  "editor.formatOnSave": true,
+  "cSpell.words": ["PLANETSCALE"],
+  "files.exclude": {
+    "**/node_modules": true
+  }
 }

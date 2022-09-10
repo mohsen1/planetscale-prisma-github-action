@@ -139,7 +139,7 @@ function createCommentBody(
     `;
 
   const cleanContent = content.replace(
-    new RegExp(process.env.PLANETSCALE_SERVICE_TOKEN || "", "g"),
+    new RegExp(process.env.PLANETSCALE_SERVICE_TOKEN, "g"),
     "pscale_tkn_***"
   );
   return `${header}${cleanContent}${footer}`;
@@ -215,30 +215,52 @@ async function main() {
   });
 
   // branch name has to be alphanumeric and start with a letter
-  const branchName = (
-    (PLANETSCALE_BRANCH_PREFIX || "pull-request-") + GITHUB_HEAD_REF
-  ).replace(/[^a-zA-Z0-9-]/g, "-");
+  const branchName = (PLANETSCALE_BRANCH_PREFIX + GITHUB_HEAD_REF).replace(
+    /[^a-zA-Z0-9-]/g,
+    "-"
+  );
 
   /** @type {import("./types").PlanetScaleBranch[]} */
   const existingBranches = JSON.parse(planetScale.branch("list"));
+  const existingBranch = existingBranches.find(
+    ({ name }) => name === branchName
+  );
 
-  if (existingBranches.find(({ name }) => name === branchName)) {
-    core.debug(`Database branch "${branchName}" already exists`);
+  if (existingBranch) {
+    core.debug(
+      `Database branch "${branchName}" already exists: ${existingBranch}`
+    );
   } else {
     core.debug(`Creating a PlanetScale database branch named ${branchName}`);
     planetScale.branch("create", branchName);
+    while (true) {
+      core.debug(`Waiting for the branch to be ready`);
+      /** @type {import("./types").PlanetScaleBranch[]} */
+      const branches = JSON.parse(planetScale.branch("list"));
+
+      if (branches.find(({ name }) => name === branchName)?.ready) {
+        core.debug(`Branch is ready`);
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
 
   // Push schema
   const { name, DATABASE_URL } = planetScale.createConnectionUrl(branchName);
   core.debug(`Created a temporary connection URL named ${name}`);
 
-  execSync(
-    `DATABASE_URL=${DATABASE_URL} ${
-      PRISMA_DB_PUSH_COMMAND || "npx prisma db push"
-    }`
-  );
+  core.debug(`Running the db push command: ${PRISMA_DB_PUSH_COMMAND}`);
+  execSync(PRISMA_DB_PUSH_COMMAND, {
+    env: {
+      ...process.env,
+      DATABASE_URL,
+    },
+    cwd: GITHUB_WORKSPACE,
+  });
 
+  core.debug(`Deleting the temporary connection URL named ${name}`);
   planetScale.deleteConnectionUrl(branchName, name);
 
   /** @type {import("./types").PlanetScaleDeployRequest[]} */

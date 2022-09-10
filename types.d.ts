@@ -3,6 +3,13 @@ declare global {
     interface ProcessEnv {
       GITHUB_WORKSPACE: string;
       GITHUB_TOKEN?: string;
+      PLANETSCALE_SERVICE_TOKEN: string;
+      PLANETSCALE_SERVICE_TOKEN_ID: string;
+      PLANETSCALE_ORG: string;
+      DB_NAME: string;
+      PLANETSCALE_MAIN_BRANCH_NAME: string;
+      PLANETSCALE_BRANCH_PREFIX: string;
+      PRISMA_DB_PUSH_COMMAND: string;
     }
   }
 }
@@ -10,6 +17,7 @@ export {};
 
 export interface PlanetScaleBranch {
   name: string;
+  ready: boolean;
   created_at: string;
   updated_at: string;
 }
