@@ -31,25 +31,57 @@ inputs:
 outputs:
   database-branch-name:
     description: "The name of the database branch created"
+    value: ${{ steps.planetscale.outputs.database-branch-name }}
   deploy-request-number:
     description: "The id of the deploy request created"
+    value: ${{ steps.planetscale.outputs.deploy-request-number }}
   deploy-request-state:
     description: "The state of the deploy request created. open or closed"
+    value: ${{ steps.planetscale.outputs.deploy-request-state }}
   deploy-request-approved:
     description: "The approval status of the deploy request created. true or false"
+    value: ${{ steps.planetscale.outputs.deploy-request-approved }}
   temporary-database-url:
     description: "DATABASE_URL value for connecting to the branch. This is going to be invalid after action is run"
+    value: ${{ steps.planetscale.outputs.temporary-database-url }}
   temporary-password-name:
     description: "The name of the temporary password created"
+    value: ${{ steps.planetscale.outputs.temporary-password-name }}
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
-  env:
-    GITHUB_TOKEN: ${{ inputs.github-token }}
-    PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
-    PLANETSCALE_SERVICE_TOKEN_ID: ${{ inputs.planetscale-service-token-id }}
-    PLANETSCALE_ORG: ${{ inputs.planetscale-org }}
-    DB_NAME: ${{ inputs.db-name }}
-    PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
-    PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}
+  using: "composite"
+  steps:
+    - id: install-planetscale-cli
+      name: Install PlanetScale CLI
+      shell: bash
+      env:
+        BASE: "https://github.com/planetscale/cli/releases/download"
+        VERSION: "0.115.0"
+      run: |
+        wget "$BASE/v$(echo $VERSION)/pscale_$(echo $VERSION)_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
+        sudo dpkg -i /tmp/pscale.deb && \
+        rm /tmp/pscale.deb
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-node@v2
+      with:
+        node-version: "16"
+
+    - uses: borales/actions-yarn@v3.0.0
+      with:
+        cmd: install
+
+    - id: planetscale
+      name: PlanetScale
+      shell: bash
+      run: node $GITHUB_ACTION_PATH/main.js
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PLANETSCALE_SERVICE_TOKEN: ${{ inputs.planetscale-service-token }}
+        PLANETSCALE_SERVICE_TOKEN_ID: ${{ inputs.planetscale-service-token-id }}
+        PLANETSCALE_ORG: ${{ inputs.planetscale-org }}
+        DB_NAME: ${{ inputs.db-name }}
+        PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
+        PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}
+        ACTIONS_RUNNER_HOOK_JOB_COMPLETED: cleanup.sh
