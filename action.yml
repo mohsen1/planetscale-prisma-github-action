@@ -58,7 +58,7 @@ runs:
         BASE: "https://github.com/planetscale/cli/releases/download"
         VERSION: "0.115.0"
       run: |
-        wget "$BASE/v$VERSION/pscale_$VERSION_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
+        wget "$BASE/v$(echo $VERSION)/pscale_$(echo $VERSION)_linux_$(dpkg --print-architecture).deb" -O /tmp/pscale.deb && \
         sudo dpkg -i /tmp/pscale.deb && \
         rm /tmp/pscale.deb
 
@@ -84,3 +84,4 @@ runs:
         DB_NAME: ${{ inputs.db-name }}
         PLANETSCALE_MAIN_BRANCH_NAME: ${{ inputs.planetscale-main-branch-name }}
         PLANETSCALE_BRANCH_PREFIX: ${{ inputs.planetscale-branch-prefix }}
+        ACTIONS_RUNNER_HOOK_JOB_COMPLETED: cleanup.sh
