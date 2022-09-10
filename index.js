@@ -161,6 +161,9 @@ async function main() {
     throw new Error("GITHUB_TOKEN environment variable is not set");
   }
 
+  core.debug(`Running as ${github.context.actor}`);
+  core.debug(`whoami: ${execSync("whoami")}`);
+
   const octokit = github.getOctokit(GITHUB_TOKEN);
 
   const comments = await octokit.rest.issues.listComments({
@@ -258,6 +261,7 @@ async function main() {
       DATABASE_URL,
     },
     cwd: GITHUB_WORKSPACE,
+    uid: 0, // run as root
   });
 
   core.debug(`Deleting the temporary connection URL named ${name}`);
