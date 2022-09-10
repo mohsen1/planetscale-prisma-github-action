@@ -25,6 +25,14 @@ async function merge() {
     return;
   }
 
+  if (!openDeployRequest.approved) {
+    core.setFailed(
+      `The deploy request for ${branchName} is not approved.` +
+        `Please approve it in PlanetScale and run this action again`
+    );
+    return;
+  }
+
   core.debug(`Merging the deploy request for ${branchName}`);
   planetScale.deployRequest("deploy", openDeployRequest.id);
 

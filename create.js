@@ -180,8 +180,8 @@ async function main() {
       Deploy request #${openDeployRequest.number}
     </a> for 
     <a href="https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/${branchName}">
-      <code>${branchName}</code> branch
-    </a>`;
+      <code>${branchName}</code>
+    </a> database branch`;
 
   /** @type {import("./types").PlanetScaleDeployRequestDiff[]} */
   const diffs = JSON.parse(
