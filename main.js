@@ -168,6 +168,12 @@ async function main() {
     openDeployRequest = JSON.parse(
       planetScale.deployRequest("create", branchName)
     );
+    const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pulls/${github.context.payload.pull_request?.number}`;
+    const planetScaleComment = `This deploy request was automatically created by ${url}`;
+    planetScale.deployRequest(
+      "review",
+      `${openDeployRequest?.number} --comment "${planetScaleComment}"`
+    );
   }
 
   if (!openDeployRequest) {
@@ -211,13 +217,6 @@ async function main() {
         diffsBody
     ),
   });
-
-  const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pulls/${github.context.payload.pull_request?.number}`;
-  const planetScaleComment = `This deploy request was automatically created by ${url}`;
-  planetScale.deployRequest(
-    "review",
-    `${openDeployRequest.number} --comment ${planetScaleComment}`
-  );
 }
 
 main().catch((err) => {
