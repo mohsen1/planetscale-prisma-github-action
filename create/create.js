@@ -200,7 +200,7 @@ async function main() {
     comment_id: comment.id,
     body: createCommentBody(
       (approvedDeployRequest
-        ? `<p>${deployRequestLink} <b>was approved</b></p>`
+        ? `<p>${deployRequestLink}<b> was approved</b></p>`
         : `<p>Waiting for ${deployRequestLink} to be approved by a PlanetScale admin</p>`) +
         diffsBody
     ),
