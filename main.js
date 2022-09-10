@@ -170,16 +170,20 @@ async function main() {
     );
   }
 
-  core.setOutput("deploy-request-number", openDeployRequest?.number);
-  core.setOutput("deploy-request-state", openDeployRequest?.state);
+  if (!openDeployRequest) {
+    throw new Error("Failed to create a deploy request");
+  }
+
+  core.setOutput("deploy-request-number", openDeployRequest.number);
+  core.setOutput("deploy-request-state", openDeployRequest.state);
   core.setOutput(
     "deploy-request-approved",
-    JSON.stringify(Boolean(openDeployRequest?.approved))
+    JSON.stringify(Boolean(openDeployRequest.approved))
   );
 
   const deployRequestLink = `
-    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest?.number}'>
-      Deploy request #${openDeployRequest?.number}
+    <a href='https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/deploy-requests/${openDeployRequest.number}'>
+      Deploy request #${openDeployRequest.number}
     </a> for 
     <a href="https://app.planetscale.com/${PLANETSCALE_ORG}/${DB_NAME}/${branchName}">
       <code>${branchName}</code> branch
@@ -187,7 +191,7 @@ async function main() {
 
   /** @type {import("./types").PlanetScaleDeployRequestDiff[]} */
   const diffs = JSON.parse(
-    planetScale.deployRequest("diff", String(openDeployRequest?.number))
+    planetScale.deployRequest("diff", String(openDeployRequest.number))
   );
   const diffsBody = diffs
     .map(
@@ -207,6 +211,13 @@ async function main() {
         diffsBody
     ),
   });
+
+  const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pulls/${github.context.payload.pull_request?.number}`;
+  const planetScaleComment = `This deploy request was automatically created by ${url}`;
+  planetScale.deployRequest(
+    "review",
+    `${openDeployRequest.number} --comment ${planetScaleComment}`
+  );
 }
 
 main().catch((err) => {
