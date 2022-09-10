@@ -168,8 +168,8 @@ async function main() {
     openDeployRequest = JSON.parse(
       planetScale.deployRequest("create", branchName)
     );
-    const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pulls/${github.context.payload.pull_request?.number}`;
-    const planetScaleComment = `This deploy request was automatically created by ${url}`;
+    const url = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/pull/${github.context.payload.pull_request?.number}`;
+    const planetScaleComment = `This deploy request was automatically created by schema changes in ${url}`;
     planetScale.deployRequest(
       "review",
       `${openDeployRequest?.number} --comment "${planetScaleComment}"`
