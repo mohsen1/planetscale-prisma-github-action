@@ -1,0 +1,44 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  PlanetScale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Number of commits to fetch. 0 indicates all history for all branches and tags.
+          # Default: 1
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v29.0.4
+        with:
+          files: |
+            example/prisma/schema.prisma
+
+      - name: Create database branch and deploy request
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: mohsen1/planetscale-prisma-github-action@main
+        id: planetscale
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          db-name: github-actions
+          planetscale-org: mohsen
+          planetscale-service-token-id: hucnq9p853sq
+          planetscale-service-token: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+
+      - name: Yarn install
+        if: steps.changed-files.outputs.any_changed == 'true'
+        working-directory: example
+        run: yarn install
+
+      - name: Push schema changes
+        if: steps.changed-files.outputs.any_changed == 'true'
+        working-directory: example
+        run: yarn prisma db push
+        env:
+          DATABASE_URL: ${{ steps.planetscale.outputs.temporary-database-url }}

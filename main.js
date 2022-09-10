@@ -153,9 +153,6 @@ async function main() {
 
   fs.writeFileSync("/tmp/planetscale-password-name", name);
 
-  core.debug(`Deleting the temporary connection URL named ${name}`);
-  planetScale.deleteConnectionUrl(branchName, name);
-
   /** @type {import("./types").PlanetScaleDeployRequest[]} */
   const deployRequests = JSON.parse(planetScale.deployRequest("list"));
   const branchDeployRequest = deployRequests.filter(
